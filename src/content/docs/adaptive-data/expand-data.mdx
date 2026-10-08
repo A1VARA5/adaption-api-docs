@@ -53,10 +53,13 @@ except DatasetTimeout as exc:
     print(exc.resource_id, exc.last_status)
     raise
 
+if final.status != "succeeded":
+    raise RuntimeError(f"Dataset expansion failed: {final.error_data}")
+
 print(final.status, final.row_count)
 ```
 
-`wait_for_completion` backs off from 2 to 30 seconds and has a one-hour default timeout. A timeout stops waiting, not the expansion job. Call it again with the same dataset ID to resume tracking. The same wait applies after [`translate`](#translate-rows) and [`localize`](#localize-rows).
+`wait_for_completion` backs off from 2 to 30 seconds and has a one-hour default timeout. A timeout stops waiting, not the expansion job. Call it again with the same dataset ID to resume tracking. The helper returns for both `succeeded` and `failed`, so check the returned status before using the result. The same wait applies after [`translate`](#translate-rows) and [`localize`](#localize-rows).
 
 Omit either row parameter to skip that type of addition. Augmentation is billed on the rows retrieved. See the [`augment` reference](/api/python/resources/datasets/methods/augment) for current limits and request fields.
 
@@ -142,6 +145,10 @@ Rows in a group are not guaranteed to be adjacent in the file. Pivot on `transla
 
 ```python
 import pandas as pd
+
+final = client.datasets.wait_for_completion(response.dataset_id)
+if final.status != "succeeded":
+    raise RuntimeError(f"Dataset expansion failed: {final.error_data}")
 
 client.datasets.download(response.dataset_id, file_format="csv").write_to_file(
     "localized.csv"
