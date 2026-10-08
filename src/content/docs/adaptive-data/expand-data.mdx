@@ -143,12 +143,10 @@ For example, here are four rows from the `localize` call above, in file order. E
 
 Rows in a group are not guaranteed to be adjacent in the file. Pivot on `translation_join_id` to put each source row next to its variants, for example to build parallel text or to keep a row and its translations in the same train or evaluation split:
 
+Before downloading, [wait for the expanded dataset](#data-augmentation) and confirm that its status is `succeeded`.
+
 ```python
 import pandas as pd
-
-final = client.datasets.wait_for_completion(response.dataset_id)
-if final.status != "succeeded":
-    raise RuntimeError(f"Dataset expansion failed: {final.error_data}")
 
 client.datasets.download(response.dataset_id, file_format="csv").write_to_file(
     "localized.csv"
